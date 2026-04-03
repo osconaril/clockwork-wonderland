@@ -10,8 +10,18 @@ type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 let globalSocket: TypedSocket | null = null;
 
+// Detect if we're on Vercel (no socket server available)
+const isServerless = typeof window !== 'undefined' && (
+  window.location.hostname.includes('vercel.app') ||
+  window.location.hostname.includes('vercel.sh')
+);
+
 export function getSocket(): TypedSocket | null {
   return globalSocket;
+}
+
+export function useIsServerless() {
+  return isServerless;
 }
 
 export function useSocket() {
@@ -20,6 +30,9 @@ export function useSocket() {
   const { setGameState, applyPatch, addLogEntry } = useGameStore();
 
   useEffect(() => {
+    // Don't attempt socket connection on serverless deployments
+    if (isServerless) return;
+
     if (globalSocket?.connected) {
       socketRef.current = globalSocket;
       return;
@@ -28,6 +41,8 @@ export function useSocket() {
     const socket: TypedSocket = io({
       transports: ['websocket', 'polling'],
       autoConnect: true,
+      reconnectionAttempts: 5,
+      timeout: 5000,
     });
 
     globalSocket = socket;
@@ -43,43 +58,24 @@ export function useSocket() {
       console.log('[Socket] Disconnected');
     });
 
+    socket.on('connect_error', () => {
+      console.log('[Socket] Connection failed — is the server running?');
+    });
+
     // Lobby events
-    socket.on('room:state', (state) => {
-      setRoomState(state);
-    });
-
-    socket.on('room:error', (error) => {
-      setError(error.message);
-    });
-
-    socket.on('room:player_joined', (player) => {
-      addPlayer(player);
-    });
-
-    socket.on('room:player_left', (playerId) => {
-      removePlayer(playerId);
-    });
+    socket.on('room:state', (state) => setRoomState(state));
+    socket.on('room:error', (error) => setError(error.message));
+    socket.on('room:player_joined', (player) => addPlayer(player));
+    socket.on('room:player_left', (playerId) => removePlayer(playerId));
 
     // Game events
-    socket.on('game:started', (state) => {
-      setGameState(state);
-    });
-
-    socket.on('game:full_state', (state) => {
-      setGameState(state);
-    });
-
-    socket.on('game:state_update', (patch) => {
-      applyPatch(patch);
-    });
-
-    socket.on('game:log', (entry) => {
-      addLogEntry(entry);
-    });
+    socket.on('game:started', (state) => setGameState(state));
+    socket.on('game:full_state', (state) => setGameState(state));
+    socket.on('game:state_update', (patch) => applyPatch(patch));
+    socket.on('game:log', (entry) => addLogEntry(entry));
 
     return () => {
       // Don't disconnect on unmount in dev (React strict mode double-mounts)
-      // socket.disconnect();
     };
   }, []);
 
@@ -88,7 +84,7 @@ export function useSocket() {
       const socket = socketRef.current;
       if (!socket) return reject(new Error('Not connected'));
 
-      socket.emit('room:create', { playerName }, (response) => {
+      socket.emit('room:create', { playerName }, (response: any) => {
         if (response.success && response.roomId && response.playerId) {
           useLobbyStore.getState().setMyPlayer(response.playerId, playerName);
           resolve({ roomId: response.roomId, playerId: response.playerId });
@@ -104,7 +100,7 @@ export function useSocket() {
       const socket = socketRef.current;
       if (!socket) return reject(new Error('Not connected'));
 
-      socket.emit('room:join', { roomId, playerName }, (response) => {
+      socket.emit('room:join', { roomId, playerName }, (response: any) => {
         if (response.success && response.playerId) {
           useLobbyStore.getState().setMyPlayer(response.playerId, playerName);
           resolve({ playerId: response.playerId });

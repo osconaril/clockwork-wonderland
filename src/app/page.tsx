@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSocket } from '@/hooks/useSocket';
+import { useSocket, useIsServerless } from '@/hooks/useSocket';
 import { useLobbyStore } from '@/stores/lobbyStore';
 import { useGameStore } from '@/stores/gameStore';
 import { CreateRoom } from '@/components/lobby/CreateRoom';
@@ -15,6 +15,7 @@ export default function HomePage() {
   const [view, setView] = useState<LobbyView>('home');
   const { roomState, myPlayerId } = useLobbyStore();
   const { gameState, isLoaded } = useGameStore();
+  const serverless = useIsServerless();
   useSocket();
 
   // If game is started, show the game board
@@ -41,6 +42,25 @@ export default function HomePage() {
           A Cooperative Game of Mystery &amp; Madness
         </p>
       </div>
+
+      {/* Serverless notice */}
+      {serverless && view === 'home' && (
+        <div className="panel-parchment max-w-md mb-8 text-center">
+          <p className="text-brass-300 font-display text-sm mb-2">Preview Mode</p>
+          <p className="text-parchment-400 text-xs leading-relaxed">
+            This is a UI preview. The game server requires WebSockets which
+            run locally. Clone the repo and run <code className="text-brass-400 bg-ink-800 px-1 rounded">node server.js</code> to play.
+          </p>
+          <a
+            href="https://github.com/osconaril/clockwork-wonderland"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-3 text-xs text-brass-400 hover:text-brass-300 underline"
+          >
+            View on GitHub
+          </a>
+        </div>
+      )}
 
       {/* Main menu */}
       {view === 'home' && (
