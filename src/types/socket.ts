@@ -2,7 +2,7 @@
 // SOCKET EVENT TYPES - Client <-> Server communication
 // ============================================================
 
-import { GameState, RoomState, RoomPlayer, Difficulty, GameLogEntry, SkillTestState, PendingDamageAssignment } from './game';
+import { GameState, RoomState, RoomPlayer, Difficulty, GameLogEntry, SkillTestState, PendingDamageAssignment, PlayerState } from './game';
 import { PlayerAction } from './actions';
 
 // --- Client -> Server Events ---
