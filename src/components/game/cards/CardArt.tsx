@@ -64,8 +64,8 @@ const ART_COMPONENTS: Record<string, (cls: string) => JSX.Element> = {
       <circle cx="50" cy="38" r="2" fill="currentColor" opacity="0.6"/>
       <circle cx="50" cy="48" r="2" fill="currentColor" opacity="0.6"/>
       {/* Plates */}
-      <rect x="33" y="25" width="12" height="8" rx="1" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1" opacity="0.3"/>
-      <rect x="55" y="25" width="12" height="8" rx="1" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1" opacity="0.3"/>
+      <rect x="33" y="25" width="12" height="8" rx="1" fill="currentColor" stroke="currentColor" strokeWidth="1" opacity="0.25"/>
+      <rect x="55" y="25" width="12" height="8" rx="1" fill="currentColor" stroke="currentColor" strokeWidth="1" opacity="0.25"/>
     </svg>
   ),
   monocle: (c) => (
